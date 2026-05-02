@@ -23,24 +23,26 @@ const version = "1.0.0"
 
 func main() {
 	var cfg config
+
 	flag.IntVar(&cfg.port, "port", 8000, "API server port")
 	flag.StringVar(&cfg.env, "env", "Development", "Environment: Development/Staging/Production")
 	flag.Parse()
 
 	logger := log.New(os.Stdout, "", log.Ldate|log.Ltime)
+
 	app := &application{
 		config: cfg,
 		logger: logger,
 	}
-	mux := http.NewServeMux()
-	mux.HandleFunc("/v1/healthcheck", app.healthcheckHandler)
+
 	srv := &http.Server{
 		Addr:         fmt.Sprintf(":%d", cfg.port),
-		Handler:      mux,
+		Handler:      app.routes(),
 		IdleTimeout:  time.Minute,
 		ReadTimeout:  10 * time.Second,
 		WriteTimeout: 30 * time.Second,
 	}
+
 	logger.Printf("starting %s server on %s", cfg.env, srv.Addr)
 	err := srv.ListenAndServe()
 	logger.Fatal(err)
